@@ -1,7 +1,7 @@
 from src.models.SystemModel import SystemModel
 from src.services.MoteurService import MoteurService
 from src.services.CapteursService import CapteursService
-from src.services.ConfigService import ConfigService
+from src.services.SystemService import SystemService
 
 from src.calculs.PID import PID
 
@@ -14,13 +14,11 @@ class MoteursControlleur:
     def __init__(self):
         self.moteursService = MoteurService()
         self.capteursService = CapteursService()
-        self.configService = ConfigService()
-        
-        # Chargement du modèle système
-        systemModel = SystemModel(self.configService["system"])
+        self.systemService = SystemService()
+      
         # Initialisation PID avec Ku, Tu
-        ku = systemModel.getKu()
-        tu = systemModel.getTu()
+        ku = self.systemService.getKu()
+        tu = self.systemService.getTu()
 
         kp = 0.6 * ku
         ki = 1.2 * ku / tu
