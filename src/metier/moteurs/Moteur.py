@@ -5,7 +5,7 @@ class Moteur:
     def __init__(self, moteurModel):
         self.moteurModel = moteurModel
         self.moteur = Motor(moteurModel.getPort())
-
+        
     def action(self,percentage):
         self.moteur.duty(percentage)
 

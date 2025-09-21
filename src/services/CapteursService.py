@@ -1,5 +1,5 @@
 from src.services.ConfigService import ConfigService
-from src.controlleurs.capteurs.CapteurCouleur import CapteurCouleur
+from src.metier.capteurs.CapteurCouleur import CapteurCouleur
 from src.models.CapteurModel import CapteurModel
 
 

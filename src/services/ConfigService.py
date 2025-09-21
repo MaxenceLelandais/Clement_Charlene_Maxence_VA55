@@ -1,5 +1,4 @@
 import threading
-from collections import defaultdict
 
 class ConfigService:
     _instance = None
