@@ -1,16 +1,12 @@
-from src.services.ConfigService import ConfigService
 from src.metier.moteurs.Moteur import Moteur
-from src.models.MoteurModel import MoteurModel
-
+from src.configuration.Configuration import Configuration
 
 class MoteurService:
     
     def __init__(self):
         
-        config = ConfigService()
-        
-        self.moteur_droit = Moteur(MoteurModel(config["moteur"]["droit"]))
-        self.moteur_gauche = Moteur(MoteurModel(config["moteur"]["gauche"]))
+        self.moteur_droit = Moteur(Configuration().getMoteurDroit())
+        self.moteur_gauche = Moteur(Configuration().getMoteurGauche())
     """
         def start_all(self):
         self.moteur_droit.start()

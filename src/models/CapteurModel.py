@@ -1,4 +1,4 @@
-from src.enums.PortEnum import PortEnum
+from src.models.enums.PortEnum import PortEnum
 
 class CapteurModel():
     

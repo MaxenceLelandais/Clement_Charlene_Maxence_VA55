@@ -1,5 +1,5 @@
-from src.enums.PortEnum import PortEnum
-from src.enums.StopEnum import StopEnum
+from src.models.enums.PortEnum import PortEnum
+from src.models.enums.StopEnum import StopEnum
 
 class MoteurModel:
     

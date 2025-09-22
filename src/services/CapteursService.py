@@ -1,15 +1,11 @@
-from src.services.ConfigService import ConfigService
 from src.metier.capteurs.CapteurCouleur import CapteurCouleur
-from src.models.CapteurModel import CapteurModel
-
+from src.configuration.Configuration import Configuration
 
 class CapteursService:
     
     def __init__(self):
         
-        config = ConfigService()
-        
-        self.capteur_couleur = CapteurCouleur(CapteurModel(config["capteur"]["couleur"]))
+        self.capteur_couleur = CapteurCouleur(Configuration().getCapteurCouleur())
 
     def status(self):
         return {

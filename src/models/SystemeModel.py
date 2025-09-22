@@ -1,4 +1,4 @@
-class SystemModel():
+class SystemeModel():
     
     def __init__(self, data):
         
