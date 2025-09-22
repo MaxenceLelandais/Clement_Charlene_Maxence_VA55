@@ -1,15 +1,11 @@
-import threading
-
 class ConfigService:
     _instance = None
-    _lock = threading.Lock()
 
     def __new__(cls, properties_file="application.properties"):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super(ConfigService, cls).__new__(cls)
-                cls._instance._load(properties_file)
-            return cls._instance
+        if cls._instance is None:
+            cls._instance = super(ConfigService, cls).__new__(cls)
+            cls._instance._load(properties_file)
+        return cls._instance
 
     def _load(self, properties_file):
         self._config = {}
@@ -28,13 +24,11 @@ class ConfigService:
             setattr(self, k.replace(".", "_"), v)
 
     def _set_nested(self, d, keys, value):
-        """Construit un dict imbriqué à partir de clés séparées par '.'"""
         for key in keys[:-1]:
             d = d.setdefault(key, {})
         d[keys[-1]] = value
 
     def _cast(self, value):
-        """Convertit automatiquement en int ou float si possible"""
         if value.isdigit():
             return int(value)
         try:
@@ -44,3 +38,6 @@ class ConfigService:
 
     def get(self, key, default=None):
         return self._config.get(key, default)
+
+    def __getitem__(self, key):
+        return self._config[key]

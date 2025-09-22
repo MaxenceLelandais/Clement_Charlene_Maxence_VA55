@@ -4,6 +4,7 @@ class Moteur:
 
     def __init__(self, moteurModel):
         self.moteurModel = moteurModel
+        print("Creating motor on port:", moteurModel.getPort())
         self.moteur = Motor(moteurModel.getPort())
         
     def action(self,percentage):

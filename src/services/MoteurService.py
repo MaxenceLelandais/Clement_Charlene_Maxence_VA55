@@ -7,11 +7,7 @@ class MoteurService:
         
         self.moteur_droit = Moteur(Configuration().getMoteurDroit())
         self.moteur_gauche = Moteur(Configuration().getMoteurGauche())
-    """
-        def start_all(self):
-        self.moteur_droit.start()
-        self.moteur_gauche.start()
-    """
+
     
     def avancer(self, vitesseDroite, vitesseGauche):
         
@@ -21,6 +17,14 @@ class MoteurService:
     def stop_all(self):
         self.moteur_droit.stop()
         self.moteur_gauche.stop()
+        
+    def get_distance_traveled(self):
+        gauche_angle = self.moteur_gauche.getAngle()
+        droite_angle = self.moteur_droit.getAngle()
+        wheel_circumference = 3.14159 * 56
+        left_distance = (gauche_angle / 360) * wheel_circumference
+        right_distance = (droite_angle / 360) * wheel_circumference
+        return (left_distance + right_distance) / 2
 
     def status(self):
         return {

@@ -1,16 +1,23 @@
-from src.metaclasses.Singleton import SingletonMeta
-from configuration.ConfigService import ConfigService
+from src.configuration.ConfigService import ConfigService
 
 from src.models.CapteurModel import CapteurModel
 from src.models.MoteurModel import MoteurModel
-from models.SystemeModel import SystemeModel
+from src.models.SystemeModel import SystemeModel
 
-class Configuration(metaclass=SingletonMeta):
-    value: str = None
+class Configuration:
+    _instance = None
 
-    def __init__(self) -> None:
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Configuration, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if hasattr(self, "_initialized"):
+            return  # avoid reinitialization
+        self._initialized = True
+
         self.configService = ConfigService()
-        
         self.capteurCouleur = CapteurModel(self.configService["capteur"]["couleur"])
         self.moteur_droit = MoteurModel(self.configService["moteur"]["droit"])
         self.moteur_gauche = MoteurModel(self.configService["moteur"]["gauche"])

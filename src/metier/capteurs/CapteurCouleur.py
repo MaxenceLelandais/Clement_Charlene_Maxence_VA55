@@ -1,10 +1,10 @@
 from pybricks.ev3devices import ColorSensor
-from src.metier.capteurs.Capteurs import Capteurs
 
-class CapteurCouleur(Capteurs):
+class CapteurCouleur():
     def __init__(self, modelCapteur):
         
-        super.__init__(modelCapteur)
+        self.capteurModel = modelCapteur
+        self.port = modelCapteur.getPort()
         
         self.capteur = ColorSensor(self.port)
     

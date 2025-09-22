@@ -1,5 +1,5 @@
 from src.metier.systeme.Systeme import Systeme
-from configuration.Configuration import Configuration
+from src.configuration.Configuration import Configuration
 
 class SystemeService:
     
@@ -12,3 +12,13 @@ class SystemeService:
     
     def getTu(self):
         return self.systeme.getTu()
+    
+    def getKp(self):
+        return self.systeme.getKp()
+    
+    def getKi(self):
+        return self.systeme.getKi()
+    
+    def getVitesse(self):
+        return self.systeme.getVitesse()
+        

@@ -11,3 +11,6 @@ class CapteursService:
         return {
             "capteur_couleur": self.capteur_couleur.status()
         }
+        
+    def get_reflexion(self):
+        return self.capteur_couleur.getReflexion()

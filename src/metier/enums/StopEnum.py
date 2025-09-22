@@ -1,16 +1,20 @@
-from enum import Enum
 from pybricks.parameters import Stop
 
 
-class StopEnum(Enum):
+class StopEnum:
     COAST = Stop.COAST
     BRAKE = Stop.BRAKE
     HOLD = Stop.HOLD
 
+    _map = {
+        "COAST": COAST,
+        "BRAKE": BRAKE,
+        "HOLD": HOLD,
+    }
+
     @staticmethod
-    def from_str(name: str) -> Stop:
-        """Convertit une string ('A', 'B', ...) en Stop pybricks."""
+    def from_str(name):
         try:
-            return StopEnum[name].value
+            return StopEnum._map[name]
         except KeyError:
-            raise ValueError(f"Enum inconnu: {name}")
+            raise ValueError("Enum inconnu: {}".format(name))

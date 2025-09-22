@@ -1,11 +1,10 @@
 import time
 
-class PID:
+class PI:
     
-    def __init__(self, kp, ki, kd, max_histoire = 5):
+    def __init__(self, kp, ki, max_histoire = 5):
         self.kp = kp
         self.ki = ki
-        self.kd = kd
 
         self.max_histoire = max_histoire
         self.errors = []
@@ -23,7 +22,6 @@ class PID:
         error = pointInit - mesure
 
         start = time.time()
-        dt = start - self.dernier_temps if self.dernier_temps else 1e-6
         self.dernier_temps = start
 
         e_kp = self.kp * error
@@ -33,8 +31,6 @@ class PID:
         self.errors.append(error)
         e_ki = self.ki * sum(self.errors)
 
-        e_kd = self.kd * (error - self.derniere_erreur) / dt if dt > 0 else 0.0
-
         self.derniere_erreur = error
 
-        return e_kp + e_ki + e_kd
+        return e_kp + e_ki
