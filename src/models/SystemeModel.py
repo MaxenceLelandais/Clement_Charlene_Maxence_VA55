@@ -8,6 +8,7 @@ class SystemeModel():
         self.tu = facteurs["tu"]
         self.kp = facteurs["kp"]
         self.ki = facteurs["ki"]
+        self.kd = facteurs["kd"]
         self.vitesse = facteurs["vitesse"]
         
     def getKu(self):
@@ -21,6 +22,9 @@ class SystemeModel():
     
     def getKi(self):
         return self.ki
+    
+    def getKd(self):
+        return self.kd
     
     def getVitesse(self):
         return self.vitesse

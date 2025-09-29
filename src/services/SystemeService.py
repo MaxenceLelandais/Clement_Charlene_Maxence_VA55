@@ -19,6 +19,9 @@ class SystemeService:
     def getKi(self):
         return self.systeme.getKi()
     
+    def getKd(self):
+        return self.systeme.getKd()
+    
     def getVitesse(self):
         return self.systeme.getVitesse()
         
