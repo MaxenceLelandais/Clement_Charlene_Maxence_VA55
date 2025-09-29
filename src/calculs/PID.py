@@ -30,8 +30,8 @@ class PID:
 
         if len(self.errors) >= self.max_histoire:
             self.errors.pop(0)
-        self.errors.append(error*dt)
-        e_ki = self.ki * sum(self.errors)
+        self.errors.append(error)
+        e_ki = self.ki * sum(self.errors)*dt
 
         e_kd = self.kd * (error - self.derniere_erreur) / dt if dt > 0 else 0.0
 

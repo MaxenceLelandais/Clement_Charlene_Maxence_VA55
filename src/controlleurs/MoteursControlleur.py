@@ -72,6 +72,7 @@ class MoteursControlleur:
             
             if self.facteur<0.1:
                 self.facteur = 0
+                self.pid.restart()
         else:
             self.facteur = 1
         
