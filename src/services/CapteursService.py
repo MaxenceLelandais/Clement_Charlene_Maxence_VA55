@@ -7,9 +7,9 @@ class CapteursService:
     
     def __init__(self):
         
-        self.capteur_couleur = CapteurCouleur(Configuration().getCapteurCouleur())
-        self.capteur_ultrason = CapteurUltrason(Configuration().getCapteurUltrason())
-        self.capteur_gyro = CapteurGyroscopique(Configuration().getCapteurGyro())
+        self.capteur_couleur = CapteurCouleur(Configuration().getDataCapteurCouleur())
+        self.capteur_ultrason = CapteurUltrason(Configuration().getDataCapteurUltrason())
+        self.capteur_gyro = CapteurGyroscopique(Configuration().getDataCapteurGyro())
 
     def status(self):
         return {
