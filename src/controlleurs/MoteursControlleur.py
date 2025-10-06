@@ -29,10 +29,12 @@ class MoteursControlleur:
         
         self.start = time.time()
 
-        self.angle_actuel = 0
-        self.vitesse = 0
-        self.post_x, self.post_y = 0,0
-                
+        # Initialisation de la position
+        self.post_x, self.post_y = 0.0, 0.0
+        self.temps_precedent = time.time()
+        self.distance_left = 0.0
+        self.distance_right = 0.0
+
     def pourBangBang(self):
         
         
@@ -71,8 +73,6 @@ class MoteursControlleur:
         self.pid = PID(kp, ki, kd)
 
     def envoieCommandeMoteurs(self):
-
-        start = time.time()
         
         if self.capteursService.get_detection():
             self.facteur *= self.ralentissement_en_pourcentage
@@ -87,38 +87,55 @@ class MoteursControlleur:
         correction = self.pid.compute(50, reflexion)
         
         
-        
 
         v_droit = max(0, self.vitesse_base - correction)*self.facteur
         v_gauche = max(0, self.vitesse_base + correction)*self.facteur
 
+        # Calculer la position avant d'envoyer la commande
+        self.calculer_position()
 
-        self.position(time.time()-start)
-
-
+        # Afficher et logger la position
         print(self.post_x, self.post_y)
-
-        self.logger.log(time.time()-self.start,self.post_x, self.post_y)
+        self.logger.log(time.time()-self.start, self.post_x, self.post_y)
+        
         self.moteursService.avancer(v_droit, v_gauche)
 
 
-    def position(self, temps):
-
-        circonference = self.moteursService.getCirconferenceWheel()
-
-        degret = self.capteursService.get_angle()
-        degret_par_seconde = self.capteursService.get_speed()
-
-        vitesse = (circonference/360)*degret_par_seconde
-        distance = vitesse * temps
+    def calculer_position(self):
+        """
+        Calcule la position (x, y) du robot en utilisant l'odométrie
+        avec l'angle du gyroscope et la vitesse moyenne des roues
+        """
+        # Calculer le temps écoulé depuis la dernière mise à jour
+        temps_actuel = time.time()
+        delta_temps = temps_actuel - self.temps_precedent
+        self.temps_precedent = temps_actuel
         
-        distance_left, distance_right = self.moteursService.get_distance_roue()
-        delta_distance = (distance_left + distance_right)/2
-        delta_theta = (distance_right - distance_left) / circonference  # in radians
-
-        self.angle_actuel += math.degrees(delta_theta)
-        self.post_x += delta_distance * math.cos(math.radians(self.angle_actuel))
-        self.post_y += delta_distance * math.sin(math.radians(self.angle_actuel))
+        # Récupérer l'angle du gyroscope (en degrés)
+        theta_deg = self.capteursService.get_angle()
+        
+        # Convertir l'angle en radians pour les calculs trigonométriques
+        theta_rad = math.radians(theta_deg)
+        
+        # Calculer la distance parcourue par chaque roue
+        new_distance_left, new_distance_right = self.moteursService.get_distance_roue()
+        
+       
+        
+        
+        # Vitesse linéaire moyenne du robot (mm/s)
+        vitesse_moyenne = ((self.distance_right - new_distance_right) / (2 * delta_temps) if delta_temps > 0 else 0)
+        
+        # Calculer le déplacement en x et y
+        deplacement_x = vitesse_moyenne * math.cos(theta_rad) * delta_temps
+        deplacement_y = vitesse_moyenne * math.sin(theta_rad) * delta_temps
+        
+        self.distance_left = new_distance_left
+        new_distance_right -= self.distance_right
+        
+        # Mettre à jour la position
+        self.post_x += deplacement_x
+        self.post_y += deplacement_y
 
 
 
