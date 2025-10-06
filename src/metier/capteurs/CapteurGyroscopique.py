@@ -3,8 +3,8 @@ from pybricks.ev3devices import GyroSensor
 
 class CapteurGyroscopique:
 
-    def __init__(self, capteurGyroscopiqueModel):
-        self.sensor = GyroSensor(capteurGyroscopiqueModel.getPort())
+    def __init__(self, port):
+        self.sensor = GyroSensor(port)
 
 
     def speed(self):

@@ -1,9 +1,9 @@
-from pybricks.ev3devices import UltrasonicSensor as EV3Ultrasonic
+from pybricks.ev3devices import UltrasonicSensor
 
 class CapteurUltrason():
-    def __init__(self, capteurUltrasonModel):
-        self.sensor = EV3Ultrasonic(capteurUltrasonModel.getPort())
-        self.distance_detect = capteurUltrasonModel.getDistance()
+    def __init__(self, port, distanceDetection):
+        self.sensor = UltrasonicSensor(port)
+        self.distance_detect = distanceDetection
     
     def distance(self):
         return self.sensor.distance()

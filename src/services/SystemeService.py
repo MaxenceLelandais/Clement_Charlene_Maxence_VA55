@@ -1,27 +1,26 @@
-from src.metier.systeme.Systeme import Systeme
 from src.configuration.Configuration import Configuration
 
 class SystemeService:
     
     def __init__(self):
         
-        self.systeme = Systeme(Configuration().getSysteme())
+        self.ku, self.tu, self.kp, self.ki, self.kd, self.vitesse = Configuration().getSysteme()
         
     def getKu(self):
-        return self.systeme.getKu()
+        return self.ku
     
     def getTu(self):
-        return self.systeme.getTu()
+        return self.tu
     
     def getKp(self):
-        return self.systeme.getKp()
+        return self.kp
     
     def getKi(self):
-        return self.systeme.getKi()
+        return self.ki
     
     def getKd(self):
-        return self.systeme.getKd()
+        return self.kd
     
     def getVitesse(self):
-        return self.systeme.getVitesse()
+        return self.vitesse
         
