@@ -9,6 +9,7 @@ from src.calculs.P import P
 
 from src.utils.Log import Log
 import time
+import math
 
 class MoteursControlleur:
 
@@ -27,6 +28,10 @@ class MoteursControlleur:
         self.pourPID()
         
         self.start = time.time()
+
+        self.angle_actuel = 0
+        self.vitesse = 0
+        self.post_x, self.post_y = 0,0
                 
     def pourBangBang(self):
         
@@ -66,6 +71,8 @@ class MoteursControlleur:
         self.pid = PID(kp, ki, kd)
 
     def envoieCommandeMoteurs(self):
+
+        start = time.time()
         
         if self.capteursService.get_detection():
             self.facteur *= self.ralentissement_en_pourcentage
@@ -80,13 +87,44 @@ class MoteursControlleur:
         correction = self.pid.compute(50, reflexion)
         
         
-        self.logger.log(time.time()-self.start,reflexion, self.moteursService.get_distance_traveled())
+        
 
         v_droit = max(0, self.vitesse_base - correction)*self.facteur
         v_gauche = max(0, self.vitesse_base + correction)*self.facteur
 
+
+        self.position(time.time()-start)
+
+
+        print(self.post_x, self.post_y)
+
+        self.logger.log(time.time()-self.start,self.post_x, self.post_y)
         self.moteursService.avancer(v_droit, v_gauche)
+
+
+    def position(self, temps):
+
+        circonference = self.moteursService.getCirconferenceWheel()
+
+        degret = self.capteursService.get_angle()
+        degret_par_seconde = self.capteursService.get_speed()
+
+        vitesse = (circonference/360)*degret_par_seconde
+        distance = vitesse * temps
         
+        distance_left, distance_right = self.moteursService.get_distance_roue()
+        delta_distance = (distance_left + distance_right)/2
+        delta_theta = (distance_right - distance_left) / circonference  # in radians
+
+        self.angle_actuel += math.degrees(delta_theta)
+        self.post_x += delta_distance * math.cos(math.radians(self.angle_actuel))
+        self.post_y += delta_distance * math.sin(math.radians(self.angle_actuel))
+
+
+
+        
+
+
         
         
         

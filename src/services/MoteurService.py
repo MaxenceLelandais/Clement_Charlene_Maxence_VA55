@@ -19,12 +19,18 @@ class MoteurService:
         self.moteur_gauche.stop()
         
     def get_distance_traveled(self):
+        left_distance, right_distance = self.get_distance_roue()
+        return (left_distance + right_distance) / 2
+    
+    def get_distance_roue(self):
         gauche_angle = self.moteur_gauche.getAngle()
         droite_angle = self.moteur_droit.getAngle()
-        wheel_circumference = 3.14159 * 56
-        left_distance = (gauche_angle / 360) * wheel_circumference
-        right_distance = (droite_angle / 360) * wheel_circumference
-        return (left_distance + right_distance) / 2
+        left_distance = (gauche_angle / 360) * self.getCirconferenceWheel()
+        right_distance = (droite_angle / 360) * self.getCirconferenceWheel()
+        return left_distance, right_distance
+    
+    def getCirconferenceWheel(self):
+        return 3.14159 * 56
 
     def status(self):
         return {

@@ -2,6 +2,7 @@ from src.configuration.ConfigService import ConfigService
 
 from src.models.CapteurModel import CapteurModel
 from src.models.CapteurUltrasonModel import CapteurUltrasonModel
+from src.models.CapteurGyroscopiqueModel import CapteurGyroscopiqueModel
 from src.models.MoteurModel import MoteurModel
 from src.models.SystemeModel import SystemeModel
 
@@ -21,6 +22,7 @@ class Configuration:
         self.configService = ConfigService()
         self.capteurCouleur = CapteurModel(self.configService["capteur"]["couleur"])
         self.capteurUltrason = CapteurUltrasonModel(self.configService["capteur"]["ultrason"])
+        self.capteurGyro = CapteurGyroscopiqueModel(self.configService["capteur"]["gyro"])
         self.moteur_droit = MoteurModel(self.configService["moteur"]["droit"])
         self.moteur_gauche = MoteurModel(self.configService["moteur"]["gauche"])
         self.systeme = SystemeModel(self.configService["system"])
@@ -30,6 +32,9 @@ class Configuration:
     
     def getCapteurUltrason(self):
         return self.capteurUltrason
+    
+    def getCapteurGyro(self):
+        return self.capteurGyro
     
     def getMoteurDroit(self):
         return self.moteur_droit
