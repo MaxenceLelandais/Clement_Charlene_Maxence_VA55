@@ -6,10 +6,13 @@ from src.calculs.BangBang import BangBang
 from src.calculs.PID import PID
 from src.calculs.PI import PI
 from src.calculs.P import P
+from src.calculs.KalmanFilter import KalmanFilter
 
 from src.utils.Log import Log
 import time
 import math
+
+from pybricks.tools import StopWatch
 
 class MoteursControlleur:
 
@@ -28,12 +31,29 @@ class MoteursControlleur:
         self.pourPID()
         
         self.start = time.time()
+        self.stopwatch = StopWatch()
 
         # Initialisation de la position
         self.post_x, self.post_y = 0.0, 0.0
-        self.temps_precedent = time.time()
+        self.temps_precedent = self.stopwatch.time()
         self.distance_left = 0.0
         self.distance_right = 0.0
+
+        # Initialisation du filtre de Kalman
+        # Paramètres à ajuster selon les performances :
+        # - process_variance : incertitude du modèle (faible = modèle fiable)
+        # - measurement_variance_gyro : bruit du gyroscope (ajuster selon la qualité du capteur)
+        # - measurement_variance_odom : bruit de l'odométrie (plus élevé car dérive des roues)
+        self.kalman_filter = KalmanFilter(
+            process_variance=0.01,        # Modèle relativement fiable
+            measurement_variance_gyro=0.5, # Gyroscope assez précis
+            measurement_variance_odom=2.0  # Odométrie moins précise (glissement des roues)
+        )
+        
+        # Paramètres de calibration (à ajuster selon votre robot)
+        self.wheel_diameter = 56.0  # Diamètre des roues en mm
+        self.wheel_base = 118.0      # Distance entre les roues en mm
+        self.kalman_filter.set_wheel_base(self.wheel_base)
 
     def pourBangBang(self):
         
@@ -95,8 +115,15 @@ class MoteursControlleur:
         self.calculer_position()
 
         # Afficher et logger la position
-        print(self.post_x, self.post_y)
-        self.logger.log(time.time()-self.start, self.post_x, self.post_y)
+        #print(self.post_x, self.post_y)
+        temps_actuel = self.stopwatch.time()
+        delta_temps = temps_actuel - self.temps_precedent
+        self.temps_precedent = temps_actuel
+
+        print(delta_temps, v_droit, v_gauche )
+        angle_gyro = self.capteursService.get_angle()
+
+        self.logger.log(delta_temps, v_droit, v_gauche, angle_gyro)
         
         self.moteursService.avancer(v_droit, v_gauche)
 
@@ -104,38 +131,46 @@ class MoteursControlleur:
     def calculer_position(self):
         """
         Calcule la position (x, y) du robot en utilisant l'odométrie
-        avec l'angle du gyroscope et la vitesse moyenne des roues
+        avec l'angle corrigé par le filtre de Kalman
         """
         # Calculer le temps écoulé depuis la dernière mise à jour
-        temps_actuel = time.time()
-        delta_temps = temps_actuel - self.temps_precedent
-        self.temps_precedent = temps_actuel
+        #temps_actuel = time.time()f
+        #temps_actuel = self.stopwatch.time()
+        #delta_temps = temps_actuel - self.temps_precedent
+        #self.temps_precedent = temps_actuel
         
         # Récupérer l'angle du gyroscope (en degrés)
-        theta_deg = self.capteursService.get_angle()
-        
-        # Convertir l'angle en radians pour les calculs trigonométriques
-        theta_rad = math.radians(theta_deg)
+        angle_gyro = self.capteursService.get_angle()
         
         # Calculer la distance parcourue par chaque roue
-        new_distance_left, new_distance_right = self.moteursService.get_distance_roue()
+        distance_left, distance_right = self.moteursService.get_distance_roue()
         
-       
+        # Appliquer le filtre de Kalman pour fusionner gyroscope et odométrie
+        theta_deg = self.kalman_filter.update_fusion(angle_gyro, distance_left, distance_right)
         
+        # Convertir l'angle corrigé en radians pour les calculs trigonométriques
+        theta_rad = math.radians(theta_deg)
         
-        # Vitesse linéaire moyenne du robot (mm/s)
-        vitesse_moyenne = ((self.distance_right - new_distance_right) / (2 * delta_temps) if delta_temps > 0 else 0)
+        # Calculer le déplacement depuis la dernière itération
+        if self.distance_left != 0.0 or self.distance_right != 0.0:
+            # Changement de distance pour chaque roue
+            delta_left = distance_left - self.distance_left
+            delta_right = distance_right - self.distance_right
+            
+            # Distance moyenne parcourue par le robot
+            distance_moyenne = (delta_left + delta_right) / 2.0
+            
+            # Calculer le déplacement en x et y avec l'angle corrigé
+            deplacement_x = distance_moyenne * math.cos(theta_rad)
+            deplacement_y = distance_moyenne * math.sin(theta_rad)
+            
+            # Mettre à jour la position
+            self.post_x += deplacement_x
+            self.post_y += deplacement_y
         
-        # Calculer le déplacement en x et y
-        deplacement_x = vitesse_moyenne * math.cos(theta_rad) * delta_temps
-        deplacement_y = vitesse_moyenne * math.sin(theta_rad) * delta_temps
-        
-        self.distance_left = new_distance_left
-        new_distance_right -= self.distance_right
-        
-        # Mettre à jour la position
-        self.post_x += deplacement_x
-        self.post_y += deplacement_y
+        # Sauvegarder les distances actuelles pour la prochaine itération
+        self.distance_left = distance_left
+        self.distance_right = distance_right
 
 
 
