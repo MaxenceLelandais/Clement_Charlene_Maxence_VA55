@@ -6,10 +6,18 @@ from src.configuration.Configuration import Configuration
 class CapteursService:
     
     def __init__(self):
+<<<<<<< Updated upstream
         
         self.capteur_couleur = CapteurCouleur(Configuration().getCapteurCouleur())
         self.capteur_ultrason = CapteurUltrason(Configuration().getCapteurUltrason())
         self.capteur_gyro = CapteurGyroscopique(Configuration().getCapteurGyro())
+=======
+        portC, distanceDetectionC = Configuration().getDataCapteurCouleur()
+        portU, distanceDetectionU = Configuration().getDataCapteurUltrason()
+        self.capteur_couleur = CapteurCouleur(portC, distanceDetectionC)
+        self.capteur_ultrason = CapteurUltrason(portU, distanceDetectionU)
+        self.capteur_gyro = CapteurGyroscopique(Configuration().getDataCapteurGyro())
+>>>>>>> Stashed changes
 
     def status(self):
         return {
