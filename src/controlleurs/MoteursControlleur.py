@@ -3,6 +3,7 @@ from src.services.CapteursService import CapteursService
 from src.services.SystemeService import SystemeService
 
 from src.calculs.BangBang import BangBang
+from src.calculs.KalmanAngle import KalmanAngle
 from src.calculs.PID import PID
 from src.calculs.PI import PI
 from src.calculs.P import P
@@ -34,6 +35,9 @@ class MoteursControlleur:
         self.temps_precedent = time.time()
         self.distance_left = 0.0
         self.distance_right = 0.0
+
+        self.theta = self.capteursService.get_angle()
+        self.kalman = KalmanAngle()
 
     def pourBangBang(self):
         
@@ -73,6 +77,8 @@ class MoteursControlleur:
         self.pid = PID(kp, ki, kd)
 
     def envoieCommandeMoteurs(self):
+
+        self.temps_precedent = time.time()
         
         if self.capteursService.get_detection():
             self.facteur *= self.ralentissement_en_pourcentage
@@ -106,10 +112,6 @@ class MoteursControlleur:
         Calcule la position (x, y) du robot en utilisant l'odométrie
         avec l'angle du gyroscope et la vitesse moyenne des roues
         """
-        # Calculer le temps écoulé depuis la dernière mise à jour
-        temps_actuel = time.time()
-        delta_temps = temps_actuel - self.temps_precedent
-        self.temps_precedent = temps_actuel
         
         # Récupérer l'angle du gyroscope (en degrés)
         theta_deg = self.capteursService.get_angle()
@@ -125,6 +127,10 @@ class MoteursControlleur:
         diff_right = new_distance_right-self.distance_right
         
         
+        # Calculer le temps écoulé depuis la dernière mise à jour
+        
+        delta_temps = time.time() - self.temps_precedent
+        
         # Vitesse linéaire moyenne du robot (mm/s)
         vitesse_moyenne = ((diff_left + diff_right) / (2 * delta_temps) if delta_temps > 0 else 0)
         
@@ -138,5 +144,8 @@ class MoteursControlleur:
         # Mettre à jour la position
         self.post_x += deplacement_x
         self.post_y += deplacement_y
+
+
+        self.temps_precedent = time.time()
 
 

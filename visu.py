@@ -2,7 +2,7 @@ import csv
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-fichier_csv = "LOG-06-10-2025_16-23-48.csv"
+fichier_csv = "LOG.csv"
 
 temps = []
 pos_x = []
