@@ -2,7 +2,7 @@ import csv
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-fichier_csv = "LOG.csv"
+fichier_csv = "LOG_vitesse_kalman.csv"
 
 temps = []
 pos_x = []
@@ -11,13 +11,15 @@ pos_y = []
 with open(fichier_csv, newline='') as csvfile:
     lecteur = csv.reader(csvfile, delimiter=',')  # ajuster le séparateur si nécessaire
     next(lecteur)  # sauter l'en-tête si elle existe
+    n = 0
     for ligne in lecteur:
         if len(ligne) < 3:
             continue
         t, x, y = map(lambda s: float(s.replace(',', '.')), ligne)
         temps.append(t)
-        pos_x.append(x)
+        pos_x.append(x+n)
         pos_y.append(y)
+        n+=1
 
 fig, ax = plt.subplots()
 ax.set_xlabel("Position X")
@@ -38,7 +40,6 @@ def update(frame):
     line.set_data(pos_x[:frame+1], pos_y[:frame+1])
     point.set_data([pos_x[frame]], [pos_y[frame]])
     return line, point
-
 ani = FuncAnimation(fig, update, frames=len(temps), init_func=init, blit=True, interval=1)
 
 plt.show()

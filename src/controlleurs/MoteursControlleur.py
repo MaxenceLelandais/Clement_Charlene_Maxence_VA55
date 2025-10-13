@@ -130,7 +130,7 @@ class MoteursControlleur:
         # Calculer le temps écoulé depuis la dernière mise à jour
         
         delta_temps = time.time() - self.temps_precedent
-        
+
         # Vitesse linéaire moyenne du robot (mm/s)
         vitesse_moyenne = ((diff_left + diff_right) / (2 * delta_temps) if delta_temps > 0 else 0)
         
@@ -147,5 +147,3 @@ class MoteursControlleur:
 
 
         self.temps_precedent = time.time()
-
-

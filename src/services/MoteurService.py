@@ -17,6 +17,11 @@ class MoteurService:
     def stop_all(self):
         self.moteur_droit.stop()
         self.moteur_gauche.stop()
+
+    def stop(self):
+        """Alias pour stop_all()"""
+        self.stop_all()
+
         
     def get_distance_traveled(self):
         left_distance, right_distance = self.get_distance_roue()
