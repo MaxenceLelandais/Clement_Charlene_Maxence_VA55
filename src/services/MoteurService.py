@@ -4,10 +4,9 @@ from src.configuration.Configuration import Configuration
 class MoteurService:
     
     def __init__(self):
-        portd,vitessed,stopd = Configuration().getMoteurDroit()
-        portg,vitesseg,stopg = Configuration().getMoteurGauche()
-        self.moteur_droit = Moteur(portd,vitessed,stopd)
-        self.moteur_gauche = Moteur(portg,vitesseg,stopg)
+        
+        self.moteur_droit = Moteur(Configuration().getMoteurDroit())
+        self.moteur_gauche = Moteur(Configuration().getMoteurGauche())
 
     
     def avancer(self, vitesseDroite, vitesseGauche):

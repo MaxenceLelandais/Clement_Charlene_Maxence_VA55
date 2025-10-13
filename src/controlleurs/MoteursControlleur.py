@@ -120,29 +120,23 @@ class MoteursControlleur:
         # Calculer la distance parcourue par chaque roue
         new_distance_left, new_distance_right = self.moteursService.get_distance_roue()
         
-       
+        
+        diff_left = new_distance_left-self.distance_left
+        diff_right = new_distance_right-self.distance_right
         
         
         # Vitesse linéaire moyenne du robot (mm/s)
-        vitesse_moyenne = ((self.distance_right - new_distance_right) / (2 * delta_temps) if delta_temps > 0 else 0)
+        vitesse_moyenne = ((diff_left + diff_right) / (2 * delta_temps) if delta_temps > 0 else 0)
         
         # Calculer le déplacement en x et y
         deplacement_x = vitesse_moyenne * math.cos(theta_rad) * delta_temps
         deplacement_y = vitesse_moyenne * math.sin(theta_rad) * delta_temps
         
         self.distance_left = new_distance_left
-        new_distance_right -= self.distance_right
+        self.distance_right = new_distance_right
         
         # Mettre à jour la position
         self.post_x += deplacement_x
         self.post_y += deplacement_y
 
 
-
-        
-
-
-        
-        
-        
-        
