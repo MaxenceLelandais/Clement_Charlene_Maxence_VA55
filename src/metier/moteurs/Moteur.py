@@ -2,11 +2,10 @@ from pybricks.ev3devices import Motor
 
 class Moteur:
 
-    def __init__(self, port,vitesse,stop_type):
-        print("Creating motor on port:", port)
-        self.moteur = Motor(port)
-        self.stop_type = stop_type
-        self.vitesse = vitesse
+    def __init__(self, moteurModel):
+        self.moteurModel = moteurModel
+        print("Creating motor on port:", moteurModel.getPort())
+        self.moteur = Motor(moteurModel.getPort())
         
     def action(self,percentage):
         self.moteur.duty(percentage)
@@ -18,7 +17,7 @@ class Moteur:
         self.moteur.run_target(aSpeed, angle)
 
     def stop(self):
-        self.moteur.stop(self.stop_type)
+        self.moteur.stop(self.moteurModel.getStop())
 
     def getAngle(self):
         return self.moteur.angle()

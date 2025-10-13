@@ -1,7 +1,10 @@
 from src.configuration.ConfigService import ConfigService
 
-from src.metier.enums.PortEnum import PortEnum
-from src.metier.enums.StopEnum import StopEnum
+from src.models.CapteurModel import CapteurModel
+from src.models.CapteurUltrasonModel import CapteurUltrasonModel
+from src.models.CapteurGyroscopiqueModel import CapteurGyroscopiqueModel
+from src.models.MoteurModel import MoteurModel
+from src.models.SystemeModel import SystemeModel
 
 class Configuration:
     _instance = None
@@ -17,41 +20,27 @@ class Configuration:
         self._initialized = True
 
         self.configService = ConfigService()
+        self.capteurCouleur = CapteurModel(self.configService["capteur"]["couleur"])
+        self.capteurUltrason = CapteurUltrasonModel(self.configService["capteur"]["ultrason"])
+        self.capteurGyro = CapteurGyroscopiqueModel(self.configService["capteur"]["gyro"])
+        self.moteur_droit = MoteurModel(self.configService["moteur"]["droit"])
+        self.moteur_gauche = MoteurModel(self.configService["moteur"]["gauche"])
+        self.systeme = SystemeModel(self.configService["system"])
 
-    def getDataCapteurCouleur(self):
-        return PortEnum.from_str(self.configService["capteur"]["couleur"]["port"])
+    def getCapteurCouleur(self):
+        return self.capteurCouleur
     
-    def getDataCapteurUltrason(self):
-        data = self.configService["capteur"]["ultrason"]
-        port = PortEnum.from_str(data["port"])
-        distanceDetection = data["distance"]
-        return port, distanceDetection
+    def getCapteurUltrason(self):
+        return self.capteurUltrason
     
-    def getDataCapteurGyro(self):
-        return PortEnum.from_str(self.configService["capteur"]["gyro"]["port"])
+    def getCapteurGyro(self):
+        return self.capteurGyro
     
     def getMoteurDroit(self):
-        data = self.configService["moteur"]["droit"]
-        port = PortEnum.from_str(data["port"])
-        vitesse= data["vitesse"]
-        stop= StopEnum.from_str(data["stop"])
-        return port,vitesse,stop
+        return self.moteur_droit
     
     def getMoteurGauche(self):
-        data = self.configService["moteur"]["gauche"]
-        port = PortEnum.from_str(data["port"])
-        vitesse= data["vitesse"]
-        stop= StopEnum.from_str(data["stop"])
-        return port,vitesse,stop
+        return self.moteur_gauche
     
     def getSysteme(self):
-        data = self.configService["system"]
-        facteurs = data["facteurs"]
-        
-        ku = facteurs["ku"]
-        tu = facteurs["tu"]
-        kp = facteurs["kp"]
-        ki = facteurs["ki"]
-        kd = facteurs["kd"]
-        vitesse = facteurs["vitesse"]
-        return ku, tu, kp, ki, kd, vitesse
+        return self.systeme
