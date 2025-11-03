@@ -19,6 +19,9 @@ class CapteursService:
     def get_reflexion(self):
         return self.capteur_couleur.getReflexion()
     
+    def get_couleur(self):
+        return self.capteur_couleur.getColor()
+    
     
     def get_detection(self):
         return self.capteur_ultrason.detection()

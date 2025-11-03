@@ -12,6 +12,7 @@ from src.calculs.KalmanFilter import KalmanFilter
 from src.utils.Log import Log
 import time
 import math
+from src.MQTT.MQTT import MQTT
 
 from pybricks.tools import StopWatch
 
@@ -21,11 +22,15 @@ class MoteursControlleur:
         self.moteursService = MoteurService()
         self.capteursService = CapteursService()
         self.systemeService = SystemeService()
+
+        self.mqtt = MQTT()
         
         self.logger = Log()
         
         self.ralentissement_en_pourcentage = 0.8
         self.facteur = 1
+
+        self.obstacle = False
       
         self.vitesse_base = self.systemeService.getVitesse()
         
@@ -98,17 +103,32 @@ class MoteursControlleur:
         self.temps_precedent = time.time()
         
         if self.capteursService.get_detection():
+
+            if not self.obstacle:
+
+                self.mqtt.send_msg("J'ai un truc ENORME devant moi !!!")
+
+            self.obstacle = True
+
             self.facteur *= self.ralentissement_en_pourcentage
             
             if self.facteur<0.1:
                 self.facteur = 0
                 self.pid.restart()
+            self.moteursService.avancer(0, 0)
+            
         else:
             self.facteur = 1
-        
+            self.obstacle = False
+
         reflexion = self.capteursService.get_reflexion()
+        #couleur = self.capteursService.get_couleur()
+
+
+
+        #self.mqtt.send_msg("Moi je vois '"+couleur+"' aujourd'hui.")
+
         correction = self.pid.compute(50, reflexion)
-        
         
 
         v_droit = max(0, self.vitesse_base - correction)*self.facteur
@@ -123,7 +143,7 @@ class MoteursControlleur:
         delta_temps = temps_actuel - self.temps_precedent
         self.temps_precedent = temps_actuel
 
-        print(delta_temps, v_droit, v_gauche )
+        #print(delta_temps, v_droit, v_gauche )
         angle_gyro = self.capteursService.get_angle()
 
         self.logger.log(delta_temps, v_droit, v_gauche, angle_gyro)
