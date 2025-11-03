@@ -124,12 +124,13 @@ class MoteursControlleur:
 
         reflexion = self.capteursService.get_reflexion()
         couleur = self.capteursService.get_couleur()
+        print(couleur, reflexion)
 
         if self.couleur_avant!=couleur:
 
             if couleur == "Rouge":
                 self.mqtt.send_msg("ENTREE BOUCLE : GAUCHE")
-            if couleur == "Bleu":
+            if couleur == "Bleu" and 0<=reflexion<=16:
                 self.mqtt.send_msg("ENTREE BOUCLE : DROITE")
             self.couleur_avant = couleur
 
