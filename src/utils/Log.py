@@ -20,10 +20,9 @@ class Log:
         
         # Nom du fichier CSV
         self.nom = "{}/LOG-{}.csv".format(self.repertoire, val)
-        
-        
-    def log(self, correction, distance, reflexion):
+
+    def log(self, correction, distance, reflexion, angle_gyro):
         # Ajouter une ligne dans le CSV
         with open(self.nom, "a") as file:
-            line = "{},{},{}\n".format(correction, distance, reflexion)
+            line = "{},{},{}, {}\n".format(correction, distance, reflexion, angle_gyro)
             file.write(line)
