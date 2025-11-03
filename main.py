@@ -14,5 +14,5 @@ moteur = MoteursControlleur()
 while True:
     moteur.envoieCommandeMoteurs()
 
-    wait(10)
+    wait(50)
 

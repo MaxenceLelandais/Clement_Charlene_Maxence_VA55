@@ -44,6 +44,7 @@ class MoteursControlleur:
         self.temps_precedent = self.stopwatch.time()
         self.distance_left = 0.0
         self.distance_right = 0.0
+        self.couleur_avant = ""
 
         # Initialisation du filtre de Kalman
         # Paramètres à ajuster selon les performances :
@@ -122,7 +123,15 @@ class MoteursControlleur:
             self.obstacle = False
 
         reflexion = self.capteursService.get_reflexion()
-        #couleur = self.capteursService.get_couleur()
+        couleur = self.capteursService.get_couleur()
+
+        if self.couleur_avant!=couleur:
+
+            if couleur == "Rouge":
+                self.mqtt.send_msg("ENTREE BOUCLE : GAUCHE")
+            if couleur == "Bleu":
+                self.mqtt.send_msg("ENTREE BOUCLE : DROITE")
+            self.couleur_avant = couleur
 
 
 
