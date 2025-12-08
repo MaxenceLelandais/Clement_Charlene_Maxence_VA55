@@ -1,3 +1,5 @@
+#!/usr/bin/env pybricks-micropython
+
 from src.services.MoteurService import MoteurService
 from src.services.CapteursService import CapteursService
 from src.services.SystemeService import SystemeService
@@ -23,7 +25,8 @@ class MoteursControlleur:
         self.capteursService = CapteursService()
         self.systemeService = SystemeService()
 
-        self.mqtt = MQTT()
+        # Passer l'ID du robot ici (changer pour robot2, robot3, etc.)
+        self.mqtt = MQTT('robot1')
         
         self.logger = Log()
         
@@ -45,6 +48,14 @@ class MoteursControlleur:
         self.distance_left = 0.0
         self.distance_right = 0.0
         self.couleur_avant = ""
+        
+        # Gestion des zones pour MQTT
+        self.dans_zone_stockage = True  # TEMPORAIRE: forcer à True pour tester
+        self.dans_zone_conflit = False
+        self.couleur_sortie = "Vert"  # Couleur qui indique la sortie
+        
+        # Signaler l'entrée dès le départ (pour tester)
+        self.mqtt.signaler_entree("GAUCHE")
 
         # Initialisation du filtre de Kalman
         # Paramètres à ajuster selon les performances :
@@ -103,61 +114,74 @@ class MoteursControlleur:
 
         self.temps_precedent = time.time()
         
+        # 1. Vérifier les ordres du contrôleur Node-RED
+        ordre = self.mqtt.get_ordre()
+        print("Ordre actuel:", ordre, "Zone stockage:", self.dans_zone_stockage, "Zone conflit:", self.dans_zone_conflit)
+        
+        # 2. Gestion obstacle (priorité absolue)
         if self.capteursService.get_detection():
 
             if not self.obstacle:
-
-                self.mqtt.send_msg("J'ai un truc ENORME devant moi !!!")
+                self.mqtt.send_msg("OBSTACLE DETECTE")
 
             self.obstacle = True
 
             self.facteur *= self.ralentissement_en_pourcentage
             
-            if self.facteur<0.1:
+            if self.facteur < 0.1:
                 self.facteur = 0
                 self.pid.restart()
             self.moteursService.avancer(0, 0)
+            return  # Sortir immédiatement
             
         else:
             self.facteur = 1
             self.obstacle = False
 
+        # 3. Lecture capteurs
         reflexion = self.capteursService.get_reflexion()
         couleur = self.capteursService.get_couleur()
-        print(couleur, reflexion)
+        print(couleur, reflexion, "| Ordre:", ordre)
 
-        if self.couleur_avant!=couleur:
+        # 4. Détection des zones et signalement MQTT
+        if self.couleur_avant != couleur:
 
             if couleur == "Rouge":
-                self.mqtt.send_msg("ENTREE BOUCLE : GAUCHE")
-            if couleur == "Bleu" and 0<=reflexion<=16:
-                self.mqtt.send_msg("ENTREE BOUCLE : DROITE")
+                self.mqtt.signaler_entree("GAUCHE")
+            elif couleur == "Bleu":
+                self.mqtt.signaler_entree("DROITE")
+            elif couleur == "Vert":
+                self.mqtt.signaler_sortie()
+            
             self.couleur_avant = couleur
 
+        # 5. Appliquer l'ordre du contrôleur - SIMPLE: STOP = arrêt, GO = avance
+        if ordre == "STOP":
+            print(">>> ARRET COMMANDE PAR NODE-RED <<<")
+            self.moteursService.avancer(0, 0)
+            self.pid.restart()
+            return
 
-
-        #self.mqtt.send_msg("Moi je vois '"+couleur+"' aujourd'hui.")
-
+        # 6. Calcul PID et commande moteurs (seulement si GO)
         correction = self.pid.compute(50, reflexion)
         
 
-        v_droit = max(0, self.vitesse_base - correction)*self.facteur
-        v_gauche = max(0, self.vitesse_base + correction)*self.facteur
+        v_droit = max(0, self.vitesse_base - correction) * self.facteur
+        v_gauche = max(0, self.vitesse_base + correction) * self.facteur
 
-        # Calculer la position avant d'envoyer la commande
+        # 7. Calculer la position avant d'envoyer la commande
         self.calculer_position()
 
-        # Afficher et logger la position
-        #print(self.post_x, self.post_y)
+        # 8. Logging
         temps_actuel = self.stopwatch.time()
         delta_temps = temps_actuel - self.temps_precedent
         self.temps_precedent = temps_actuel
 
-        #print(delta_temps, v_droit, v_gauche )
         angle_gyro = self.capteursService.get_angle()
 
         self.logger.log(delta_temps, v_droit, v_gauche, angle_gyro)
         
+        # 9. Envoyer commandes moteurs
         self.moteursService.avancer(v_droit, v_gauche)
 
 
