@@ -29,6 +29,7 @@ class MoteursControlleur:
         self.mqtt = MQTT()
         
         self.logger = Log()
+        self.stopwatch = StopWatch()
         
         self.ralentissement_en_pourcentage = 0.8
         self.facteur = 1
@@ -38,13 +39,10 @@ class MoteursControlleur:
         self.vitesse_base = self.systemeService.getVitesse()
         
         self.pourPID()
-        
-        self.start = time.time()
-        self.stopwatch = StopWatch()
 
         # Initialisation de la position
         self.post_x, self.post_y = 0.0, 0.0
-        self.temps_precedent = self.stopwatch.time()
+        self.temps_precedent = time.time()
         self.distance_left = 0.0
         self.distance_right = 0.0
         self.couleur_avant = ""
@@ -107,11 +105,12 @@ class MoteursControlleur:
 
     def detection_entree_sortie_intersection(self, couleur, reflexion):
 
+
         if self.couleur_avant!=couleur:
 
             if couleur == "Rouge":
 
-                print("----",couleur, reflexion)
+                print(1, reflexion)
                 brick.sound.beep()
                 try:
                     self.mqtt.send_msg("ENTREE BOUCLE : GAUCHE")
@@ -121,10 +120,10 @@ class MoteursControlleur:
                 self.temps_derniere_detection = time.time()
                 wait(300)
 
-            if couleur == "Bleu" :
-                print("----",couleur, reflexion)
+            elif couleur == "Bleu" :
+                print(-1, reflexion)
                 
-                if 0<=reflexion<=18 and time.time() - self.temps_derniere_detection>=self.delay_boucle_gauche_droite_min_s:
+                if time.time() - self.temps_derniere_detection>=self.delay_boucle_gauche_droite_min_s:
                     
                     brick.sound.beep()
                     try:
@@ -133,7 +132,10 @@ class MoteursControlleur:
                         None
                     print("ENTREE BOUCLE : DROITE")
                     self.temps_derniere_detection = time.time()
-                    wait(300)
+                wait(100)
+            else:
+
+                print(0, reflexion)
 
             self.couleur_avant = couleur
 
@@ -166,6 +168,9 @@ class MoteursControlleur:
         self.detection_obstacle()
 
         reflexion = self.capteursService.get_reflexion()
+
+        #if self.temps_derniere_detection==0 or time.time() - self.temps_derniere_detection>=self.delay_boucle_gauche_droite_min_s:
+
         couleur = self.capteursService.get_couleur()
 
         self.detection_entree_sortie_intersection(couleur, reflexion)
@@ -177,7 +182,7 @@ class MoteursControlleur:
         v_gauche = max(0, self.vitesse_base + correction)*self.facteur
 
         # Calculer la position avant d'envoyer la commande
-        self.calculer_position()
+        #self.calculer_position()
 
         # Afficher et logger la position
         #print(self.post_x, self.post_y)
@@ -186,9 +191,9 @@ class MoteursControlleur:
         self.temps_precedent = temps_actuel
 
         #print(delta_temps, v_droit, v_gauche )
-        angle_gyro = self.capteursService.get_angle()
+        #angle_gyro = self.capteursService.get_angle()
 
-        self.logger.log(delta_temps, v_droit, v_gauche, angle_gyro)
+        #self.logger.log(delta_temps, v_droit, v_gauche, angle_gyro)
         
         self.moteursService.avancer(v_droit, v_gauche)
 
@@ -215,6 +220,8 @@ class MoteursControlleur:
         
         # Convertir l'angle corrigé en radians pour les calculs trigonométriques
         theta_rad = math.radians(theta_deg)
+
+        
         
         # Calculer le déplacement depuis la dernière itération
         if self.distance_left != 0.0 or self.distance_right != 0.0:
