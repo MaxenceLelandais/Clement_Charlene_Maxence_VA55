@@ -9,6 +9,9 @@ from src.calculs.PI import PI
 from src.calculs.P import P
 from src.calculs.KalmanFilter import KalmanFilter
 
+from pybricks.tools import wait
+from pybricks import ev3brick as brick
+
 from src.utils.Log import Log
 import time
 import math
@@ -62,6 +65,9 @@ class MoteursControlleur:
         self.wheel_base = 118.0      # Distance entre les roues en mm
         self.kalman_filter.set_wheel_base(self.wheel_base)
 
+        self.delay_boucle_gauche_droite_min_s = 24
+        self.temps_derniere_detection = 0
+
     def pourBangBang(self):
         
         
@@ -99,10 +105,40 @@ class MoteursControlleur:
         
         self.pid = PID(kp, ki, kd)
 
-    def envoieCommandeMoteurs(self):
+    def detection_entree_sortie_intersection(self, couleur, reflexion):
 
-        self.temps_precedent = time.time()
-        
+        if self.couleur_avant!=couleur:
+
+            if couleur == "Rouge":
+
+                print("----",couleur, reflexion)
+                brick.sound.beep()
+                try:
+                    self.mqtt.send_msg("ENTREE BOUCLE : GAUCHE")
+                except:
+                    None
+                print("ENTREE BOUCLE : GAUCHE")
+                self.temps_derniere_detection = time.time()
+                wait(300)
+
+            if couleur == "Bleu" :
+                print("----",couleur, reflexion)
+                
+                if 0<=reflexion<=18 and time.time() - self.temps_derniere_detection>=self.delay_boucle_gauche_droite_min_s:
+                    
+                    brick.sound.beep()
+                    try:
+                        self.mqtt.send_msg("ENTREE BOUCLE : DROITE")
+                    except:
+                        None
+                    print("ENTREE BOUCLE : DROITE")
+                    self.temps_derniere_detection = time.time()
+                    wait(300)
+
+            self.couleur_avant = couleur
+
+    def detection_obstacle(self):
+
         if self.capteursService.get_detection():
 
             if not self.obstacle:
@@ -122,21 +158,17 @@ class MoteursControlleur:
             self.facteur = 1
             self.obstacle = False
 
+        
+    def envoieCommandeMoteurs(self):
+
+        self.temps_precedent = time.time()
+        
+        self.detection_obstacle()
+
         reflexion = self.capteursService.get_reflexion()
         couleur = self.capteursService.get_couleur()
-        print(couleur, reflexion)
 
-        if self.couleur_avant!=couleur:
-
-            if couleur == "Rouge":
-                self.mqtt.send_msg("ENTREE BOUCLE : GAUCHE")
-            if couleur == "Bleu" and 0<=reflexion<=16:
-                self.mqtt.send_msg("ENTREE BOUCLE : DROITE")
-            self.couleur_avant = couleur
-
-
-
-        #self.mqtt.send_msg("Moi je vois '"+couleur+"' aujourd'hui.")
+        self.detection_entree_sortie_intersection(couleur, reflexion)
 
         correction = self.pid.compute(50, reflexion)
         

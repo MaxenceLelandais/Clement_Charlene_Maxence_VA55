@@ -14,7 +14,7 @@ class MQTT:
 
     def __init__(self):
 
-        self.client = MQTTClient('robot1','10.197.207.73')
+        self.client = MQTTClient('robot1','10.12.203.73')
         # Connexion au broker
         self.client.set_callback(self.getmessages)
         self.client.connect()
