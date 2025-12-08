@@ -63,8 +63,8 @@ class MoteursControlleur:
         self.wheel_base = 118.0      # Distance entre les roues en mm
         self.kalman_filter.set_wheel_base(self.wheel_base)
 
-        self.delay_boucle_gauche_droite_min_s = 24
-        self.temps_derniere_detection = 0
+        self.nbr_passage = 0
+        self.niveau_passage = ["DROITE","GAUCHE"]
 
     def pourBangBang(self):
         
@@ -103,39 +103,17 @@ class MoteursControlleur:
         
         self.pid = PID(kp, ki, kd)
 
-    def detection_entree_sortie_intersection(self, couleur, reflexion):
-
+    def detection_entree_sortie_intersection(self, couleur):
 
         if self.couleur_avant!=couleur:
 
             if couleur == "Rouge":
 
-                print(1, reflexion)
+                endroit = self.niveau_passage[self.nbr_passage%2]
                 brick.sound.beep()
-                try:
-                    self.mqtt.send_msg("ENTREE BOUCLE : GAUCHE")
-                except:
-                    None
-                print("ENTREE BOUCLE : GAUCHE")
-                self.temps_derniere_detection = time.time()
-                wait(300)
-
-            elif couleur == "Bleu" :
-                print(-1, reflexion)
-                
-                if time.time() - self.temps_derniere_detection>=self.delay_boucle_gauche_droite_min_s:
-                    
-                    brick.sound.beep()
-                    try:
-                        self.mqtt.send_msg("ENTREE BOUCLE : DROITE")
-                    except:
-                        None
-                    print("ENTREE BOUCLE : DROITE")
-                    self.temps_derniere_detection = time.time()
-                wait(100)
-            else:
-
-                print(0, reflexion)
+                self.mqtt.send_msg("ENTREE BOUCLE : " + endroit)
+                self.nbr_passage+=1
+                wait(200)
 
             self.couleur_avant = couleur
 
@@ -169,11 +147,9 @@ class MoteursControlleur:
 
         reflexion = self.capteursService.get_reflexion()
 
-        #if self.temps_derniere_detection==0 or time.time() - self.temps_derniere_detection>=self.delay_boucle_gauche_droite_min_s:
-
         couleur = self.capteursService.get_couleur()
 
-        self.detection_entree_sortie_intersection(couleur, reflexion)
+        self.detection_entree_sortie_intersection(couleur)
 
         correction = self.pid.compute(50, reflexion)
         
