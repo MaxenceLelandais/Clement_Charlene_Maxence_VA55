@@ -51,12 +51,13 @@ class MoteursControlleur:
         self.couleur_avant = ""
         
         # Gestion des zones pour MQTT
-        self.dans_zone_stockage = True  # TEMPORAIRE: forcer à True pour tester
+        self.dans_zone_stockage = False
         self.dans_zone_conflit = False
         self.couleur_sortie = "Vert"  # Couleur qui indique la sortie
         
-        # Signaler l'entrée dès le départ (pour tester)
-        self.mqtt.signaler_entree("GAUCHE")
+        # Distance depuis l'entrée en zone de stockage (pour le peloton/coopératif)
+        self.distance_entree_stockage = 0.0  # Distance totale parcourue à l'entrée
+        self.distance_depuis_entree = 0.0    # Distance depuis l'entrée
 
         # Initialisation du filtre de Kalman
         # Paramètres à ajuster selon les performances :
@@ -166,20 +167,76 @@ class MoteursControlleur:
         reflexion = self.capteursService.get_reflexion()
 
         couleur = self.capteursService.get_couleur()
-
-
-        self.detection_entree_sortie_intersection(couleur)
-
+        
+        # Calculer la distance totale parcourue
+        distance_totale = self.moteursService.get_distance_traveled()
+        
         print(couleur, reflexion, "| Ordre:", ordre)
 
-        # 5. Appliquer l'ordre du contrôleur - SIMPLE: STOP = arrêt, GO = avance
+        # 4. Détection des zones et signalement MQTT
+        if self.couleur_avant != couleur:
+            
+            if couleur == "Rouge":
+                # Entrée zone stockage voie GAUCHE
+                self.dans_zone_stockage = True
+                self.dans_zone_conflit = False
+                self.distance_entree_stockage = distance_totale
+                self.mqtt.signaler_entree("GAUCHE", 0)  # Distance 0 = à l'entrée
+                
+            elif couleur == "Bleu":
+                # Entrée zone stockage voie DROITE
+                self.dans_zone_stockage = True
+                self.dans_zone_conflit = False
+                self.distance_entree_stockage = distance_totale
+                self.mqtt.signaler_entree("DROITE", 0)
+                
+            elif couleur == "Vert":
+                # Sortie de la zone de conflit
+                self.dans_zone_stockage = False
+                self.dans_zone_conflit = False
+                self.mqtt.signaler_sortie()
+            
+            self.couleur_avant = couleur
+        
+        # 4b. Envoyer régulièrement la distance depuis l'entrée (pour coopératif et peloton)
+        if self.dans_zone_stockage or self.dans_zone_conflit:
+            self.distance_depuis_entree = distance_totale - self.distance_entree_stockage
+            self.mqtt.envoyer_distance(self.distance_depuis_entree)
+
+        # 5. Appliquer l'ordre du contrôleur
         if ordre == "STOP":
             print(">>> ARRET COMMANDE PAR NODE-RED <<<")
             self.moteursService.avancer(0, 0)
             self.pid.restart()
             return
+        
+        elif ordre == "FOLLOW":
+            # Mode peloton : maintenir la distance de sécurité avec le robot devant
+            distance_robot_devant = self.mqtt.get_distance_robot_devant()
+            
+            if distance_robot_devant is not None:
+                # Calculer l'écart avec la distance de sécurité
+                distance_securite = self.mqtt.get_distance_securite()
+                
+                # La distance réelle entre nous = distance du robot devant - notre distance
+                # On veut maintenir distance_securite (200mm)
+                ecart = distance_robot_devant - self.distance_depuis_entree
+                erreur = ecart - distance_securite
+                
+                if erreur > 50:  # Trop loin du robot devant, accélérer
+                    self.facteur = min(1.5, 1.0 + erreur / 200)
+                    print("PELOTON: Trop loin ({:.0f}mm), accélère".format(ecart))
+                elif erreur < -50:  # Trop proche du robot devant, ralentir
+                    self.facteur = max(0.3, 1.0 + erreur / 200)
+                    print("PELOTON: Trop proche ({:.0f}mm), ralentit".format(ecart))
+                else:  # Distance OK
+                    self.facteur = 1.0
+                    print("PELOTON: Distance OK ({:.0f}mm)".format(ecart))
+            else:
+                print("PELOTON: En attente info robot devant...")
+                self.facteur = 0.8  # Avancer doucement
 
-        # 6. Calcul PID et commande moteurs (seulement si GO)
+        # 6. Calcul PID et commande moteurs (seulement si GO ou FOLLOW)
         correction = self.pid.compute(50, reflexion)
         
 
